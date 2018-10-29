@@ -4,6 +4,9 @@
       <div class="left-side">
         <video autoplay controls ref="video"></video>
         <button @click="saveFile">Stop &amp; Download</button>
+        <select id="mime-type" @change="changeCodec">
+          <option v-for="mimeType in checkedMimeTypes" :value="mimeType.type" :disabled="!mimeType.supported">{{mimeType.type}}</option>
+        </select>
       </div>
 
       <div class="right-side">
@@ -27,7 +30,26 @@
       return {
         thumbnails: [],
         chunks: [],
+        mimeTypes: ['video/webm',
+          'audio/webm',
+          'video/webm;codecs=vp8',
+          'video/webm;codecs=vp9',
+          'video/webm;codecs=daala',
+          'video/webm;codecs=h264',
+          'audio/webm;codecs=opus',
+          'video/mpeg'],
+        videoCodec: 'video/webm',
         recorder: null
+      }
+    },
+    computed: {
+      checkedMimeTypes: function() {
+        return this.mimeTypes.map(type => {
+          return {
+            type,
+            supported: MediaRecorder.isTypeSupported(type)
+          }
+        })
       }
     },
     mounted() {
@@ -35,6 +57,9 @@
       this.getCaptures()
     },
     methods: {
+      changeCodec(evt) {
+        this.videoCodec = evt.target.value
+      },
       getCaptures() {
         desktopCapturer.getSources({types: ['window', 'screen']}, (error, sources) => {
           if (error) throw error
@@ -79,7 +104,7 @@
         this.$refs.video.srcObject = stream
         this.chunks = []
         this.recorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm'
+          mimeType: this.videoCodec
         })
         this.recorder.addEventListener('dataavailable', ({data}) => {
           console.log('add')
