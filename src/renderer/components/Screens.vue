@@ -62,7 +62,7 @@
           */
           video: {
             mandatory: {
-              // chromeMediaSourceId: source.id,
+              chromeMediaSourceId: source.id,
               chromeMediaSource: 'desktop'
               /*
               minWidth: 1280,
