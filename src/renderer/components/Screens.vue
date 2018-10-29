@@ -17,11 +17,12 @@
 </template>
 
 <script>
-  import SystemInformation from './LandingPage/SystemInformation'
   import {desktopCapturer} from 'electron'
   const { dialog } = require('electron').remote
 
   export default {
+    name: 'landing-page',
+    components: {},
     data() {
       return {
         thumbnails: [],
@@ -29,8 +30,6 @@
         recorder: null
       }
     },
-    name: 'landing-page',
-    components: { SystemInformation },
     mounted() {
       console.log('mounted')
       this.getCaptures()
