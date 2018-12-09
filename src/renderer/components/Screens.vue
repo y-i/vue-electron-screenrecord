@@ -2,11 +2,17 @@
   <div id="wrapper">
     <main>
       <div class="left-side">
-        <video autoplay controls ref="video"></video>
-        <button @click="saveFile">Stop &amp; Download</button>
-        <select id="mime-type" @change="changeCodec">
-          <option v-for="mimeType in checkedMimeTypes" :value="mimeType.type" :disabled="!mimeType.supported">{{mimeType.type}}</option>
-        </select>
+        <video autoplay ref="video"></video>
+        <div style="width: 100%;">
+          <button @click="startRecording">Start</button>
+          <button @click="stopRecording">Stop</button>
+          <button @click="saveFile">Download</button>
+        </div>
+        <div style="width: 100%;">
+          <select id="mime-type" @change="changeCodec">
+            <option v-for="mimeType in checkedMimeTypes" :value="mimeType.type" :disabled="!mimeType.supported">{{mimeType.type}}</option>
+          </select>
+        </div>
       </div>
 
       <div class="right-side">
@@ -30,7 +36,8 @@
       return {
         thumbnails: [],
         chunks: [],
-        mimeTypes: ['video/webm',
+        mimeTypes: [
+          'video/webm',
           'audio/webm',
           'video/webm;codecs=vp8',
           'video/webm;codecs=vp9',
@@ -53,7 +60,6 @@
       }
     },
     mounted() {
-      console.log('mounted')
       this.getCaptures()
     },
     methods: {
@@ -74,6 +80,13 @@
           }
         })
       },
+      startRecording() {
+        this.chunks = []
+        this.recorder.start()
+      },
+      stopRecording() {
+        this.recorder.stop()
+      },
       async setToVideoElem(source) {
         console.log('set')
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -90,12 +103,6 @@
             mandatory: {
               chromeMediaSourceId: source.id,
               chromeMediaSource: 'desktop'
-              /*
-              minWidth: 1280,
-              maxWidth: 1280,
-              minHeight: 720,
-              maxHeight: 720
-              */
             }
           }
         }).catch(e => {
@@ -111,11 +118,8 @@
           console.log('add')
           this.chunks.push(data)
         })
-        this.recorder.start()
       },
       saveFile() {
-        // this.recorder.requestData()
-        this.recorder.stop()
         dialog.showSaveDialog({
           defaultPath: `./recorded-screen.webm`
         }, (filename, bookmark) => {
