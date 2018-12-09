@@ -77,13 +77,14 @@
       async setToVideoElem(source) {
         console.log('set')
         const stream = await navigator.mediaDevices.getUserMedia({
-          // audio: false,
+          // XXX: audio capture failed on macOS sierra
+          audio: false,
+          /*
           audio: {
             mandatory: {
               chromeMediaSource: 'desktop'
             }
           },
-          /*
           */
           video: {
             mandatory: {
