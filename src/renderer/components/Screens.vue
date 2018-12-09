@@ -2,8 +2,17 @@
   <div id="wrapper">
     <main>
       <div class="left-side">
-        <video autoplay controls ref="video"></video>
-        <button @click="saveFile">Stop &amp; Download</button>
+        <video autoplay ref="video"></video>
+        <div style="width: 100%;">
+          <button @click="startRecording">Start</button>
+          <button @click="stopRecording">Stop</button>
+          <button @click="saveFile">Download</button>
+        </div>
+        <div style="width: 100%;">
+          <select id="mime-type" @change="changeCodec">
+            <option v-for="mimeType in checkedMimeTypes" :value="mimeType.type" :disabled="!mimeType.supported">{{mimeType.type}}</option>
+          </select>
+        </div>
       </div>
 
       <div class="right-side">
@@ -17,25 +26,46 @@
 </template>
 
 <script>
-  import SystemInformation from './LandingPage/SystemInformation'
   import {desktopCapturer} from 'electron'
   const { dialog } = require('electron').remote
 
   export default {
+    name: 'landing-page',
+    components: {},
     data() {
       return {
         thumbnails: [],
         chunks: [],
+        mimeTypes: [
+          'video/webm',
+          'audio/webm',
+          'video/webm;codecs=vp8',
+          'video/webm;codecs=vp9',
+          'video/webm;codecs=daala',
+          'video/webm;codecs=h264',
+          'audio/webm;codecs=opus',
+          'video/mpeg'],
+        videoCodec: 'video/webm',
         recorder: null
       }
     },
-    name: 'landing-page',
-    components: { SystemInformation },
+    computed: {
+      checkedMimeTypes: function() {
+        return this.mimeTypes.map(type => {
+          return {
+            type,
+            supported: MediaRecorder.isTypeSupported(type)
+          }
+        })
+      }
+    },
     mounted() {
-      console.log('mounted')
       this.getCaptures()
     },
     methods: {
+      changeCodec(evt) {
+        this.videoCodec = evt.target.value
+      },
       getCaptures() {
         desktopCapturer.getSources({types: ['window', 'screen']}, (error, sources) => {
           if (error) throw error
@@ -50,9 +80,17 @@
           }
         })
       },
+      startRecording() {
+        this.chunks = []
+        this.recorder.start()
+      },
+      stopRecording() {
+        this.recorder.stop()
+      },
       async setToVideoElem(source) {
         console.log('set')
         const stream = await navigator.mediaDevices.getUserMedia({
+          // XXX: audio capture failed on macOS sierra
           audio: false,
           /*
           audio: {
@@ -63,14 +101,8 @@
           */
           video: {
             mandatory: {
-              // chromeMediaSourceId: source.id,
+              chromeMediaSourceId: source.id,
               chromeMediaSource: 'desktop'
-              /*
-              minWidth: 1280,
-              maxWidth: 1280,
-              minHeight: 720,
-              maxHeight: 720
-              */
             }
           }
         }).catch(e => {
@@ -80,17 +112,14 @@
         this.$refs.video.srcObject = stream
         this.chunks = []
         this.recorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm'
+          mimeType: this.videoCodec
         })
         this.recorder.addEventListener('dataavailable', ({data}) => {
           console.log('add')
           this.chunks.push(data)
         })
-        this.recorder.start()
       },
       saveFile() {
-        // this.recorder.requestData()
-        this.recorder.stop()
         dialog.showSaveDialog({
           defaultPath: `./recorded-screen.webm`
         }, (filename, bookmark) => {
