@@ -2,6 +2,9 @@
 
 > An electron-vue project
 
+capture window or screen
+![](https://raw.githubusercontent.com/y-i/vue-electron-screenrecord/master/images/ss.png)
+
 #### Build Setup
 
 ``` bash
